@@ -1,140 +1,28 @@
 # API Assignment - Spotify - Zeelmaekers Maxim - R0781323
-# import require modules
+#import require modules
 import base64
-from prettytable import PrettyTable
 import requests
+user_id = "7712521c15294edf864724788e6724d3"
+user_secret = "c5eba5c0adf642e6a7bc03ae0164b514"
 
-# Predefined variabled | some may be empty to use later.
-# API URL
-url = "https://accounts.spotify.com/api/token"
-# Filled in later
-headers = {}
-data = {}
-artist = ""
-x = PrettyTable()
-y = PrettyTable()
-i = 1
+method= "POST"
+token_url = "https://accounts.spotify.com/api/token"
 
-# Layout
-line = "---------------------------------------------------------------------"
-head = "API Assignment - Spotify - Zeelmaekers Maxim - R0781323 \n" +line +"  \nPlease follow the instructins below | Type exit to quit."
-clear = "\n" * 100
+#Encoding credentials to base64 needed for spotify
+#Encoding first to bytes then converting bytes to base 64
+#use decode else you get byets mixed in with your base64
+user_creds = f"{user_id}:{user_secret}"
+user_creds64 = base64.b64encode(user_creds.encode())
+user_creds64 = user_creds64.decode()
+print(user_creds64)
 
+token_data = {
+    "grant_type: user_credentials"
+}
 
-# ---- Main code -----
-try:
-    # Login menu - API Client ID & Secret
-    # using exit to leave the prompt
-    print(head)
-    client_id = input("Please enter your API Client ID: ")
-    print(clear)
-    if client_id == "exit":
-        quit()
-    print(head)
-    print("API Client ID accepted. ✓" )
-    client_secret = input("Please enter your API client Secret: ")
-    print(clear)
-    if client_secret == "exit":
-       quit()
-    #check is client_id AND client_secret are give, if not ask again
-    if client_secret == "" or client_id == "":
-        print("please authenticate before continuing.")   
-    
+token_header = {
 
-    # Encode to base64 as required by spotify API
-    # See Authorization: Base 64 encoded string that contains the client ID and client secret key.
-    # source: https://developer.spotify.com/documentation/general/guides/authorization-guide/
-    client_creds = f"{client_id}:{client_secret}"
-    client_creds64 = base64.b64encode(client_creds.encode())
-
-    client_creds64 = client_creds64.decode()
-    # Troubelshooting step to print base64 credentials. Uncomment line below
-    # print("Base64 key = "+ client_creds64)
-
-    # Setting up headers & variables needed for request
-    headers['Authorization'] = f"Basic {client_creds64}"
-    data['grant_type'] = "client_credentials"
-
-    # Request API data with POST request
-    tokendata = requests.post(url, headers=headers, data=data)
-        
-    # Check if API request was successvol (code 200)
-    # see Response Status Codes
-    # https://developer.spotify.com/documentation/web-api/
-    if tokendata.status_code not in range(200, 299):
-        print( "ERROR! \nWe were not able to authenicate you, please check your credentials.\n" + line + "\n"+"Your credentials were:" + "\nClient ID:"+ client_id + "\nClient Secret:"+ client_secret +"\n"+ line + "\nError Code: " + str(tokendata.status_code))
-    
-    else:
-        
-        access_token = tokendata.json()['access_token']
-        # Troubelshooting step to print base64 credentials. Uncomment line below
-        # print("Token = "+ token)
-
-        print("\n" + head)
-        artist = input("Please enter the name of the artist: ")
-        if artist == "exit":
-                quit()
-        
-        # Spotify_API_URL search for Artist with the artist variable.
-        # see https://developer.spotify.com/console/get-search-item/
-        # Set headers with API URL and Auth token. 
-        # request the response in a JSON format with GET.
-        Spotify_API_URL = f"https://api.spotify.com/v1/search?q={artist}&type=artist&limit=1&market=BE"
-        headers = {
-            "Authorization": "Bearer " + access_token
-        }
-        request_json = requests.get(url=Spotify_API_URL, headers=headers).json()
-        
-        if request_json["artists"]["total"] == 0:
-                print("Cannot find any artist with the name '" + artist + "' Check for spelling errors and try again.")
-                
-        # Troubleshooting step -> Print JSON file of the artist
-        # Uncomment the line below
-        # print(request_json)
-
-        # Prepare API Calls and clear terminal
-        print(clear)
-        # Documentation can be found https://developer.spotify.com/console/get-search-item/
-        artist_ID = request_json["artists"]["items"][0]["id"]
-        artist_Url = f"https://api.spotify.com/v1/artists/{artist_ID}"
-        track_Url = f"https://api.spotify.com/v1/artists/{artist_ID}/top-tracks?market=BE"
-        album_Url = f"https://api.spotify.com/v1/artists/{artist_ID}/albums?market=BE"
-
-        # Make API calls with get requests
-        artist_info = requests.get(url=artist_Url, headers=headers).json()
-        top_tracks = requests.get(url=track_Url, headers=headers).json()
-        artist_albums = requests.get(url=album_Url, headers=headers).json()
-
-
-        # Fill Table Y with Artist information
-        x.field_names = ["Main", "Answer"]
-        x.add_rows(
-        [
-            ["Name: ", artist_info["name"]],
-            ["Number of followers:", str(artist_info["followers"]["total"])],
-            ["Popularity",str(artist_info["popularity"])],
-            ["Genres", str(artist_info["genres"])]
-        ]
-        )
-
-        # Fill Table Y with Top 10 Tracks
-        y.field_names = ["Number", "Track"]
-        for track in top_tracks["tracks"]:
-            
-            y.add_rows(
-            [
-            [str(i), track["name"]]
-            ] 
-            )
-            i = i+1
-
-        # Print tables
-        # Table X = Artist infomrmation
-        # Table Y = Top 10 Tracks
-        print("Information about " + artist_info["name"] + ":")
-        print(x)
-        print("Top 10 Tracks of " + artist_info["name"] + ":")
-        print(y)
-
-#Error code catching
-except Exception as e: print(e)
+    "Authorization": f"Basic {user_creds64.decode()}"
+}
+r = requests.post(token_url, data=token_data, headers=token_header)
+print(r.json())
