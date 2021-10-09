@@ -94,6 +94,7 @@ try:
         
         if request_json["artists"]["total"] == 0:
                 print("Cannot find any artist with the name '" + artist + "' Check for spelling errors and try again.")
+                quit()
                 
         # Troubleshooting step -> Print JSON file of the artist
         # Uncomment the line below
